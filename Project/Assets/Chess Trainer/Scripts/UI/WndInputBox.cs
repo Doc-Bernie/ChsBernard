@@ -19,20 +19,23 @@ public class WndInputBox : MonoBehaviour {
 		
 	}
 
+    protected void Awake()
+    {
+    }
     public void Init(string _header, WndManager.InputBoxCallback _callback, string _default = "")
     {
         lblHeader.text = _header;
         callBack = _callback;
         txtContent.text = _default;
+        txtContent.ActivateInputField();
     }
 
     public void OnBtnOK()
     {
-        string name = txtContent.textComponent.text;
+        string name = txtContent.text;
 
-        if (callBack(name))
-        {
-            gameObject.SetActive(false);
-        }
+        callBack(name);
+
+        gameObject.SetActive(false);
     }
 }

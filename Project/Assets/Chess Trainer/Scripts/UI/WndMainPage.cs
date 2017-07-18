@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -10,6 +11,8 @@ public class WndMainPage : MonoBehaviour {
     public GameObject LibraryList = null;
     public GameObject LibraryListCell = null;
     public TMPro.TextMeshProUGUI TxtLibCount = null;
+    public GameObject PopupMenu = null;
+    public RectTransform RTMenu = null;
 
     protected List<GameObject> cells = new List<GameObject>();
 
@@ -39,6 +42,7 @@ public class WndMainPage : MonoBehaviour {
     void AddLibraries()
     {
         int countLib = ctGameManager.Singleton.m_Libraries.Count;
+        TxtLibCount.text = string.Format("({0}) libraries", countLib);
         if (countLib <= 0)
             return;
 
@@ -52,7 +56,10 @@ public class WndMainPage : MonoBehaviour {
             GameObject childObj = GameObject.Instantiate(LibraryListCell);
             //childObj.transform.parent = LibraryList.transform;
             childObj.transform.SetParent(LibraryList.transform, false);
-            childObj.GetComponent<LibraryCell>().SetName(lib.name);
+
+            string text = string.Format("{0} ({1})", lib.name, lib.lines.Count);
+
+            childObj.GetComponent<LibraryCell>().Init(i, text, CallbackTouchCell);
             childObj.GetComponent<Toggle>().group = LibraryList.GetComponent<ToggleGroup>();
             childObj.GetComponent<Toggle>().isOn = curLibIdx == i ? true : false;
             childObj.GetComponent<Toggle>().onValueChanged.AddListener(OnLibCellChanged);
@@ -62,7 +69,6 @@ public class WndMainPage : MonoBehaviour {
 
         LibraryList.GetComponent<ToggleGroup>().allowSwitchOff = false;
 
-        TxtLibCount.text = string.Format("({0}) libraries", ctGameManager.Singleton.m_Libraries.Count);
     }
     
     void UpdateWnd()
@@ -76,6 +82,7 @@ public class WndMainPage : MonoBehaviour {
     {
         curLibIdx = 0;
         UpdateWnd();
+        showPopupMenu(false);
     }
 
     public void OnBtnView()
@@ -98,6 +105,8 @@ public class WndMainPage : MonoBehaviour {
 
         string strPrompt = string.Format("Do you really want to remove {0} library?", GetCurLibName());
         WndManager.Singleton.OpenMsgBox(strPrompt, CallBackRemove, WndManager.MSGBOX_BTN_TYPE.YesNo);
+        showPopupMenu(false);
+
     }
 
     public void OnBtnRename()
@@ -105,7 +114,9 @@ public class WndMainPage : MonoBehaviour {
         if (GetCurLibName().Equals(string.Empty))
             return;
 
-        WndManager.Singleton.OpenInputBox("Enter Library's name :", CallBackRename);
+        WndManager.Singleton.OpenInputBox("Enter Library's name :", CallBackRename, GetCurLibName());
+        showPopupMenu(false);
+
     }
 
     public void OnBtnTrainer()
@@ -118,6 +129,12 @@ public class WndMainPage : MonoBehaviour {
 
     bool CallBackAdd(string _name)
     {
+        if (_name.Equals(""))
+        {
+            WndManager.Singleton.OpenMsgBox("The name cannot be empty.");
+            return false;
+        }
+
         if (ctGameManager.Singleton.GetLibrary(_name) != null)
         {
             WndManager.Singleton.OpenMsgBox("Duplicated name.");
@@ -134,6 +151,12 @@ public class WndMainPage : MonoBehaviour {
 
     bool CallBackRename(string _name)
     {
+        if (_name.Equals(string.Empty))
+        {
+            WndManager.Singleton.OpenMsgBox("The name cannot be empty.");
+            return false;
+        }
+
         if (ctGameManager.Singleton.GetLibrary(_name) != null)
         {
             WndManager.Singleton.OpenMsgBox("Duplicated name.");
@@ -142,6 +165,7 @@ public class WndMainPage : MonoBehaviour {
 
         ctGameManager.Singleton.RenameLibrary(GetCurLibName(), _name);
         UpdateWnd();
+
         return true;
     }
 
@@ -185,5 +209,30 @@ public class WndMainPage : MonoBehaviour {
     string GetCurLibName()
     {
         return ctGameManager.Singleton.m_Libraries[curLibIdx].name;
+    }
+
+    public bool CallbackTouchCell(int _id, bool _longTouch, PointerEventData _eventData)
+    {
+        ctLibrary lib = ctGameManager.Singleton.GetLibrary(_id);
+        if (lib == null)
+            return true;
+
+        curLibIdx = _id;
+        if (_longTouch)
+        {
+            showPopupMenu(true);
+            RTMenu.position = _eventData.position;
+        }
+        else
+        {
+            WndManager.Singleton.OpenLibraryPage(lib.name);
+        }
+
+        return true;
+    }
+
+    void showPopupMenu(bool _vis = true)
+    {
+        PopupMenu.SetActive(_vis);
     }
 }

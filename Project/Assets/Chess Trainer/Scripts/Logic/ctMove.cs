@@ -10,10 +10,6 @@ public class ctMove {
     public ctMove(ctLine _parent)
     {
         parent = _parent;
-
-        moves.Add("e4 e5");
-        moves.Add("Nf3 Nc6");
-        moves.Add("Bb5 a6");
     }
 
     public void SaveFile(string _key)
@@ -39,8 +35,13 @@ public class ctMove {
         }
     }
 
-    public string ToString()
+    public override string ToString()
     {
-        return "1.e4 e5 2.Nf3 Nc6 3.Bb5 a6";
+        string strRet = "";
+
+        for (int i = 0; i < moves.Count; i++)
+            strRet += string.Format("{0}.{1}", (i + 1), moves[i]);
+        
+        return strRet;
     }
 }

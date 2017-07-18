@@ -122,6 +122,10 @@ public class ctGameManager : MonoBehaviour {
 
         lib.lines.Add(line);
 
+        line.moves.moves.Add("e4 e5");
+        line.moves.moves.Add("Nf3 Nc6");
+        line.moves.moves.Add("Bb5 a6");
+
         m_Libraries.Add(lib);
     }
 

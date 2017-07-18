@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class WndLibraryPage : MonoBehaviour {
     public GameObject LineList = null;
     public GameObject LineListCell = null;
     public TMPro.TextMeshProUGUI TxtLibName = null;
     public TMPro.TextMeshProUGUI TxtLineCount = null;
+    public GameObject PopupMenu = null;
+    public RectTransform RTMenu = null;
 
     protected string libName = "";
     protected ctLibrary library = null;
@@ -44,6 +47,7 @@ public class WndLibraryPage : MonoBehaviour {
 
         curLineIdx = 0;
         UpdateWnd();
+        showPopupMenu(false);
     }
 
     protected void ClearList()
@@ -56,6 +60,7 @@ public class WndLibraryPage : MonoBehaviour {
     protected void AddLines()
     {
         int linesCount = library.lines.Count;
+        TxtLineCount.text = string.Format("({0}) lines", linesCount);
         if (linesCount <= 0)
             return;
 
@@ -70,7 +75,9 @@ public class WndLibraryPage : MonoBehaviour {
 
             GameObject childObj = GameObject.Instantiate(LineListCell);
             childObj.transform.SetParent(LineList.transform, false);
-            childObj.GetComponent<LineCell>().SetName(line.name);
+
+            string text = string.Format("{0} ({1})", line.name, line.moves.MoveCount());
+            childObj.GetComponent<LibraryCell>().Init(i, text, CallbackTouchCell);
             Toggle tgl = childObj.GetComponent<Toggle>();
             tgl.isOn = (i == curLineIdx);
             tgl.onValueChanged.AddListener(OnListSelChanged);
@@ -80,7 +87,6 @@ public class WndLibraryPage : MonoBehaviour {
         }
 
         tglGrp.allowSwitchOff = false;
-        TxtLineCount.text = string.Format("({0}) lines", library.lines.Count);
     }
 
     void UpdateWnd()
@@ -111,6 +117,8 @@ public class WndLibraryPage : MonoBehaviour {
 
         string strPrompt = string.Format("Do you really want to remove \"{0}\" library?", GetCurLine().name);
         WndManager.Singleton.OpenMsgBox(strPrompt, CallBackRemove, WndManager.MSGBOX_BTN_TYPE.YesNo);
+        showPopupMenu(false);
+
     }
 
     public void OnBtnRename()
@@ -118,7 +126,9 @@ public class WndLibraryPage : MonoBehaviour {
         if (GetCurLine() == null)
             return;
 
-        WndManager.Singleton.OpenInputBox("Enter Line's name :", CallBackRename);
+        WndManager.Singleton.OpenInputBox("Enter Line's name :", CallBackRename, GetCurLine().name);
+        showPopupMenu(false);
+
     }
 
     public void OnBtnView()
@@ -146,6 +156,12 @@ public class WndLibraryPage : MonoBehaviour {
 
     bool CallBackAdd(string _name)
     {
+        if (_name.Equals(""))
+        {
+            WndManager.Singleton.OpenMsgBox("The name cannot be empty.");
+            return false;
+        }
+
         if (library.GetLine(_name) != null)
         {
             WndManager.Singleton.OpenMsgBox("Duplicated name.");
@@ -156,13 +172,22 @@ public class WndLibraryPage : MonoBehaviour {
         line.name = _name;
         library.lines.Add(line);
 
-        UpdateWnd();
+        //UpdateWnd();
+
+        // direct go to line page
+        WndManager.Singleton.OpenLinePage(_name);
 
         return true;
     }
 
     bool CallBackRename(string _name)
     {
+        if (_name.Equals(""))
+        {
+            WndManager.Singleton.OpenMsgBox("The name cannot be empty.");
+            return false;
+        }
+
         if (library.GetLine(_name) != null)
         {
             WndManager.Singleton.OpenMsgBox("Duplicated name.");
@@ -186,4 +211,27 @@ public class WndLibraryPage : MonoBehaviour {
         return true;
     }
 
+    public bool CallbackTouchCell(int _id, bool _longTouch, PointerEventData _eventData)
+    {
+        ctLine line = library.GetLine(_id);
+        if (line == null)
+            return true;
+
+        if (_longTouch)
+        {
+            showPopupMenu(true);
+            RTMenu.position = _eventData.position;
+        }
+        else
+        {
+            WndManager.Singleton.OpenLinePage(line.name);
+        }
+
+        return true;
+    }
+
+    void showPopupMenu(bool _vis = true)
+    {
+        PopupMenu.SetActive(_vis);
+    }
 }
