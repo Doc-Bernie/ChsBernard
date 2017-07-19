@@ -110,6 +110,8 @@ public class ctGameManager : MonoBehaviour {
 
         PlayerPrefs.SetString(TRAINER_NAME, m_Trainer.name);
         PlayerPrefs.SetFloat(TRAINER_SCORE, m_Trainer.score);
+
+        PlayerPrefs.Save();
     }
 
     void _createDefaultLibrary()

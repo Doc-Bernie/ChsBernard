@@ -104,7 +104,7 @@ public class WndMainPage : MonoBehaviour {
         if (GetCurLibName().Equals(string.Empty))
             return;
 
-        string strPrompt = string.Format("Do you really want to remove {0} library?", GetCurLibName());
+        string strPrompt = string.Format("Do you really want to remove \"{0}\" library?", GetCurLibName());
         WndManager.Singleton.OpenMsgBox(strPrompt, CallBackRemove, WndManager.MSGBOX_BTN_TYPE.YesNo);
         showPopupMenu(false);
 
