@@ -11,6 +11,7 @@ public class WndLibraryPage : MonoBehaviour {
     public TMPro.TextMeshProUGUI TxtLineCount = null;
     public GameObject PopupMenu = null;
     public RectTransform RTMenu = null;
+    public MonoBehaviour ScrollRect = null;
 
     protected string libName = "";
     protected ctLibrary library = null;
@@ -77,7 +78,7 @@ public class WndLibraryPage : MonoBehaviour {
             childObj.transform.SetParent(LineList.transform, false);
 
             string text = string.Format("{0} ({1})", line.name, line.moves.MoveCount());
-            childObj.GetComponent<LibraryCell>().Init(i, text, CallbackTouchCell);
+            childObj.GetComponent<LibraryCell>().Init(i, text, ScrollRect, CallbackTouchCell);
             Toggle tgl = childObj.GetComponent<Toggle>();
             tgl.isOn = (i == curLineIdx);
             tgl.onValueChanged.AddListener(OnListSelChanged);
