@@ -217,6 +217,7 @@ public class WndLibraryPage : MonoBehaviour {
         if (line == null)
             return true;
 
+        curLineIdx  = _id;
         if (_longTouch)
         {
             showPopupMenu(true);
