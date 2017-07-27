@@ -47,8 +47,7 @@ public class ctLibrary {
 
         for (int i = 0; i < _lib.lines.Count; i ++)
         {
-            ctLine line = new ctLine(this);
-            line.Clone(_lib.lines[i]);
+            ctLine line = new ctLine(this, _lib.lines[i].name, _lib.lines[i].moves);
             this.lines.Add(line);
         }
     }

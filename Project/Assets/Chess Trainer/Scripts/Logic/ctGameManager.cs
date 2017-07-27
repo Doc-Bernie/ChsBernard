@@ -60,9 +60,10 @@ public class ctGameManager : MonoBehaviour {
 
                 for (int idxLine = 0; idxLine < lineCount; idxLine++)
                 {
-                    ctLine line = new ctLine(lib);
-                    line.name = PlayerPrefs.GetString(LINE_NAME_KEY + idxLib.ToString() + "_" + idxLine.ToString(), "");
-                    line.moves.ReadFile(LINE_ORDER_KEY + idxLib.ToString() + "_" + idxLine.ToString());
+                    string lineName = PlayerPrefs.GetString(LINE_NAME_KEY + idxLib.ToString() + "_" + idxLine.ToString(), "");
+                    string lineMoves = PlayerPrefs.GetString(LINE_ORDER_KEY + idxLib.ToString() + "_" + idxLine.ToString(), "");
+
+                    ctLine line = new ctLine(lib, lineName, lineMoves);
 
                     if (lib.GetLineIdx(line.name) > -1)
                     {
@@ -103,7 +104,7 @@ public class ctGameManager : MonoBehaviour {
                 {
                     ctLine line = lib.lines[idxLine];
                     PlayerPrefs.SetString(LINE_NAME_KEY + idxLib.ToString() + "_" + idxLine.ToString(), line.name);
-                    line.moves.SaveFile(LINE_ORDER_KEY + idxLib.ToString() + "_" + idxLine.ToString());
+                    PlayerPrefs.SetString(LINE_ORDER_KEY + idxLib.ToString() + "_" + idxLine.ToString(), line.moves);
                }
             }
         }
@@ -119,14 +120,9 @@ public class ctGameManager : MonoBehaviour {
         ctLibrary lib = new ctLibrary();
         lib.name = "Spanish Openings";
 
-        ctLine line = new ctLine(lib);
-        line.name = "Morphy Defense";
+        ctLine line = new ctLine(lib, "Morphy Defense", "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 ");
 
         lib.lines.Add(line);
-
-        line.moves.moves.Add("e4 e5");
-        line.moves.moves.Add("Nf3 Nc6");
-        line.moves.moves.Add("Bb5 a6");
 
         m_Libraries.Add(lib);
     }
@@ -195,4 +191,37 @@ public class ctGameManager : MonoBehaviour {
     {
         return idx < m_Libraries.Count ? m_Libraries[idx] : null;
     }
+
+    public string GetSpriteNameFromType(ImgPiece.PieceType _type)
+    {
+        switch (_type)
+        {
+            case ImgPiece.PieceType.WhitePawn:
+                return "Pieces/WhitePawn";
+            case ImgPiece.PieceType.WhiteRook:
+                return "Pieces/WhiteRook";
+            case ImgPiece.PieceType.WhiteKnight:
+                return "Pieces/WhiteKnight";
+            case ImgPiece.PieceType.WhiteBishop:
+                return "Pieces/WhiteBishop";
+            case ImgPiece.PieceType.WhiteQueen:
+                return "Pieces/WhiteQueen3";
+            case ImgPiece.PieceType.WhiteKing:
+                return "Pieces/WhiteKing";
+            case ImgPiece.PieceType.BlackPawn:
+                return "Pieces/BlackPawn";
+            case ImgPiece.PieceType.BlackRook:
+                return "Pieces/BlackRook";
+            case ImgPiece.PieceType.BlackKnight:
+                return "Pieces/BlackKnight";
+            case ImgPiece.PieceType.BlackBishop:
+                return "Pieces/BlackBishop";
+            case ImgPiece.PieceType.BlackQueen:
+                return "Pieces/BlackQueen3";
+            case ImgPiece.PieceType.BlackKing:
+                return "Pieces/BlackKing";
+        }
+        return "";
+    }
+
 }

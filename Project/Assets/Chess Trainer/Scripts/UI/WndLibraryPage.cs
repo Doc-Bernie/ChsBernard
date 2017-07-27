@@ -77,7 +77,7 @@ public class WndLibraryPage : MonoBehaviour {
             GameObject childObj = GameObject.Instantiate(LineListCell);
             childObj.transform.SetParent(LineList.transform, false);
 
-            string text = string.Format("{0} ({1})", line.name, line.moves.MoveCount());
+            string text = string.Format("{0} ({1})", line.name, line.moveList.Count);
             childObj.GetComponent<LibraryCell>().Init(i, text, ScrollRect, CallbackTouchCell);
             Toggle tgl = childObj.GetComponent<Toggle>();
             tgl.isOn = (i == curLineIdx);
@@ -169,8 +169,7 @@ public class WndLibraryPage : MonoBehaviour {
             return false;
         }
 
-        ctLine line = new ctLine(library);
-        line.name = _name;
+        ctLine line = new ctLine(library, _name);
         library.lines.Add(line);
 
         //UpdateWnd();

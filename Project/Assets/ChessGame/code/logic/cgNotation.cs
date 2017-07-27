@@ -200,8 +200,11 @@ public class cgNotation
                 chosenMove = null;
 
                 nextIndex = curgame.IndexOf(" ", nextIndex + 1);
-                if (nextIndex == -1 || lastIndex == -1) break;
-                move = curgame.Substring(lastIndex + 1, nextIndex - lastIndex);
+                //if (nextIndex == -1 || lastIndex == -1) break;
+                if (nextIndex == -1)
+                    move = curgame.Substring(lastIndex + 1);
+                else
+                    move = curgame.Substring(lastIndex + 1, nextIndex - lastIndex);
                 bool legitMove = (!move.Contains(".") && move.Length > 1 && !move.Contains("\n")) ? true : false;
 
                 move = move.Trim(' ');
