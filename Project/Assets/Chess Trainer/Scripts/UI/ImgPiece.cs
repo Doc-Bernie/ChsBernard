@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 [RequireComponent (typeof(Image))]
-public class ImgPiece : MonoBehaviour
+public class ImgPiece : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 {
     public enum PieceType
     {
@@ -23,22 +24,39 @@ public class ImgPiece : MonoBehaviour
         BlackKing = -6
     };
 
-    public Sprite[] m_Sprites;
+    public Image m_ImgPiece;
     public PieceType m_PieceType = PieceType.WhitePawn;
+    public int m_SquarePos;
+
+    public delegate void PointerUpHandler(int _pos);
+
+    PointerUpHandler m_PointerUpHandler;
 
     protected void Awake()
     {
-        SetType(m_PieceType);
     }
 
-    public void SetType(PieceType _type)
+    public void Init(PieceType _type, int _pos, PointerUpHandler _pointerUpHandler)
     {
         m_PieceType = _type;
+        m_SquarePos = _pos;
+        m_PointerUpHandler = _pointerUpHandler;
+
         Debug.Log("SetType = " + _type.ToString());
         Sprite[] sprites = Resources.LoadAll<Sprite>(ctGameManager.Singleton.GetSpriteNameFromType(_type));
 
-        GetComponent<Image>().sprite = sprites[0];
+        m_ImgPiece.sprite = sprites[0];
     }
 
+    public void OnPointerDown(PointerEventData _eventData)
+    {
+
+    }
+
+    public void OnPointerUp(PointerEventData _eventData)
+    {
+        if (m_PointerUpHandler != null)
+            m_PointerUpHandler(m_SquarePos);
+    }
 
 }

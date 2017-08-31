@@ -40,7 +40,9 @@ public class cgSimpleMove
     /// <summary>
     /// Did this move lead to a pawn promoting to a queen(queening)?
     /// </summary>
-    public bool queened;
+    public bool promoted;
+
+    public byte promotionType;
 
     /// <summary>
     /// A simple move, moving a single piece to another square.

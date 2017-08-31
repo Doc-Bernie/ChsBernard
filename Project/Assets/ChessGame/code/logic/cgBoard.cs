@@ -172,16 +172,38 @@ public class cgBoard
         squares[move.from] = 0;
         //_enPassantSquare = 0;
         //Pawn auto-promote to queen
-        if (move.to < 8 && squares[move.to] == 1)
+//         if (move.to < 8 && squares[move.to] == 1)
+//         {
+//             move.promoted = true;
+//             
+//             squares[move.to] = (sbyte)move.promotionType;
+//         }
+//         else if (move.to > 55 && squares[move.to] == -1)
+//         {
+//             move.promoted = true;
+//             squares[move.to] = (sbyte)move.promotionType;
+//         }
+
+        if (move.promoted)
         {
-            move.queened = true;
-            squares[move.to] = 5;
+            bool isWhite = (squares[move.to] == 1);
+            switch (move.promotionType)
+            {
+                case 2:
+                    squares[move.to] = (sbyte)(isWhite ? 2 : -2);
+                    break;
+                case 3:
+                    squares[move.to] = (sbyte)(isWhite ? 3 : -3);
+                    break;
+                case 4:
+                    squares[move.to] = (sbyte)(isWhite ? 4 : -4);
+                    break;
+                case 5:
+                    squares[move.to] = (sbyte)(isWhite ? 5 : -5);
+                    break;
+            }
         }
-        else if (move.to > 55 && squares[move.to] == -1)
-        {
-            move.queened = true;
-            squares[move.to] = -5;
-        }
+
         if (move is cgCastlingMove)
         {
             //if move is castling there is a secondary move to also perform.
@@ -251,8 +273,8 @@ public class cgBoard
             }
             else squares[moves[moves.Count - 1].to] = moves[moves.Count - 1].capturedType;
 
-            //if move was a pawn getting queened then revert the piece back to pawn aswell.
-            if (moves[moves.Count - 1].queened)
+            //if move was a pawn getting promoted then revert the piece back to pawn aswell.
+            if (moves[moves.Count - 1].promoted)
             {
                 //bool white = squares[moves[moves.Count - 1].from] > 0 ? true : false;
                 squares[moves[moves.Count - 1].from] = (sbyte)(moves[moves.Count - 1].from > 30 ? -1 : 1);

@@ -259,7 +259,7 @@ public class cgChessBoardScript : MonoBehaviour
             int whitePromotions = 0;
             foreach (cgSimpleMove mov in _abstractBoard.moves)
             {
-                if (mov.queened)
+                if (mov.promoted)
                 {
                     if (mov.to < 30) whitePromotions++;
                     else blackPromotions++;
@@ -609,7 +609,7 @@ public class cgChessBoardScript : MonoBehaviour
         }
         cgChessPieceScript piece = _getPieceOn(cgGlobal.SquareNames[move.from]);
         piece.moveToSquare(_getSquare(cgGlobal.SquareNames[move.to]));
-        if (move.queened) piece.SetType(_abstractBoard.squares[move.to] > 0 ? cgChessPieceScript.Type.WhiteQueen : cgChessPieceScript.Type.BlackQueen);
+        if (move.promoted) piece.SetType(_abstractBoard.squares[move.to] > 0 ? cgChessPieceScript.Type.WhiteQueen : cgChessPieceScript.Type.BlackQueen);
         if (move is cgCastlingMove)
         {
             cgChessPieceScript piece2 = _getPieceOn(cgGlobal.SquareNames[(move as cgCastlingMove).secondFrom]);

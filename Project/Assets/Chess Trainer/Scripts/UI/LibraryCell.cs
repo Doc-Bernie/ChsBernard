@@ -4,19 +4,23 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class LibraryCell : EventTriggerEx, IPointerDownHandler, IPointerUpHandler, IDragHandler
+public class LibraryCell : EventTriggerEx, IPointerDownHandler, IPointerUpHandler,/* IPointerClickHandler,*/ IDragHandler
 {
     public delegate bool CallbackTouch(int _id, bool _longTouch, PointerEventData _eventData);
 
     public TMPro.TextMeshProUGUI txtName = null;
+    public GameObject imgBG = null;
   
     public string libName { get; set; }
 
     protected int m_ID = 0;
     protected CallbackTouch m_Callback = null;
+    protected bool m_ToggleMode = false;
 
     bool m_isPressing = false;
     bool m_isLongPress = false;
+
+    Coroutine m_Coroutine = null;
 
 	// Use this for initialization
 	void Start () {
@@ -42,6 +46,25 @@ public class LibraryCell : EventTriggerEx, IPointerDownHandler, IPointerUpHandle
 //         txtName.text = _text;// string.Format("{0} ({1})", lib.name, lib.lines.Count);
 //         callback = _callback;
         m_delegates.Add(_delegate);
+        SetToggleMode(false);
+    }
+
+    public void SetToggleMode(bool _toggleMode)
+    {
+//         if (m_ToggleMode == _toggleMode)
+//             return;
+
+        m_ToggleMode = _toggleMode;
+        if (m_ToggleMode)
+        {
+            imgBG.SetActive(true);
+            gameObject.GetComponent<Toggle>().enabled = true;
+        }
+        else
+        {
+            imgBG.SetActive(false);
+            gameObject.GetComponent<Toggle>().enabled = false;
+        }
     }
 
     public override void OnPointerDown(PointerEventData eventData)
@@ -51,9 +74,27 @@ public class LibraryCell : EventTriggerEx, IPointerDownHandler, IPointerUpHandle
         if (m_Callback == null)
             return;
 
-        m_isPressing = true;
-        m_isLongPress = false;
-        StartCoroutine(InvokeMethod(eventData));
+//         if (eventData.clickCount < 2)
+        {
+            m_isPressing = true;
+            m_isLongPress = false;
+            if (m_Coroutine != null)
+            {
+                StopCoroutine(m_Coroutine);
+            }
+            m_Coroutine = StartCoroutine(InvokeMethod(eventData));
+        }
+//         else
+//         {
+//             m_isLongPress = false;
+//             if (m_Coroutine != null)
+//             {
+//                 StopCoroutine(m_Coroutine);
+//                 m_Coroutine = null;
+//             }
+//             m_Callback(m_ID, false, eventData);
+//             eventData.clickCount = 0;
+//         }
     }
 
     public override void OnDrag(PointerEventData eventData)
@@ -73,10 +114,14 @@ public class LibraryCell : EventTriggerEx, IPointerDownHandler, IPointerUpHandle
         if (m_Callback == null)
             return;
 
-        StopCoroutine("InvokeMethod");
+        if (m_Coroutine != null)
+        {
+            StopCoroutine(m_Coroutine);
+            m_Coroutine = null;
+        }
 
-        if (!m_isLongPress && m_isPressing)
-            m_Callback(m_ID, false, eventData);
+        if (!m_ToggleMode && !m_isLongPress && m_isPressing)
+             m_Callback(m_ID, false, eventData);
 
         m_isPressing = false;
 

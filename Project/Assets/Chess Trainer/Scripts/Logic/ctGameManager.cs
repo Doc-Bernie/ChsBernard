@@ -70,7 +70,7 @@ public class ctGameManager : MonoBehaviour {
                         Debug.Log("Duplicated line name found, cannot add line");
                     }
                     else
-                        lib.lines.Add(line);
+                        lib.AddLine(line);
                 }
 
                 if (GetLibrary(lib.name) != null)
@@ -79,7 +79,7 @@ public class ctGameManager : MonoBehaviour {
                     Debug.Log("Duplicated library name found, cannot add library");
                 }
                 else
-                    m_Libraries.Add(lib);
+                    AddLibrary(lib);
             }
         }
         else
@@ -122,27 +122,35 @@ public class ctGameManager : MonoBehaviour {
 
         ctLine line = new ctLine(lib, "Morphy Defense", "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 ");
 
-        lib.lines.Add(line);
+        lib.AddLine(line);
 
-        m_Libraries.Add(lib);
+        AddLibrary(lib);
     }
 
-    public ctLine GetLine(string _name)
+    public ctLine GetLine(string _libName, string _lineName)
     {
-        for (int i = 0; i < m_Libraries.Count; i ++)
+        ctLibrary lib = GetLibrary(_libName);
+        if (lib != null)
         {
-            if (m_Libraries[i].GetLine(_name) != null)
-                return m_Libraries[i].GetLine(_name);
+            return lib.GetLine(_lineName);
         }
+
         return null;
     }
 
-    public bool AddLibrary(string _name, ctLibrary _lib)
+    public bool AddLibrary(ctLibrary _lib, bool _sort = false)
     {
-        if (GetLibrary(_name) != null)
+        if (GetLibrary(_lib.name) != null)
             return false;
 
         m_Libraries.Add(_lib);
+        
+        if (_sort)
+            m_Libraries.Sort(delegate(ctLibrary p1, ctLibrary p2)
+            {
+                return p1.name.CompareTo(p2.name);
+            });
+
         return true;
     }
 
@@ -181,7 +189,7 @@ public class ctGameManager : MonoBehaviour {
     {
         for (int i = 0; i < m_Libraries.Count; i ++ )
         {
-            if (m_Libraries[i].name.Equals(_name))
+            if (m_Libraries[i].name.ToLower().Equals(_name.ToLower()))
                 return i;
         }
         return -1;

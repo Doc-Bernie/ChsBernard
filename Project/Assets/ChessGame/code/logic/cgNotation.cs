@@ -133,7 +133,26 @@ public class cgNotation
                     else str += "O-O";
                 }
                 else str += cgGlobal.SquareNames[pcem.to];
-                if (pcem.queened) str += "=Q";
+                if (pcem.promoted)
+                {
+                    switch (pcem.promotionType)
+                    {
+                        case 2:
+                            str += "=R";
+                            break;
+                        case 3:
+                            str += "=N";
+                            break;
+                        case 4:
+                            str += "=B";
+                            break;
+                        case 5:
+                            str += "=Q";
+                            break;
+                        default:
+                            break;
+                    }
+                }
                 str += " ";
                 disambiguationBoard.move(pcem);
             }
@@ -141,6 +160,69 @@ public class cgNotation
 
         return str;
     }
+
+    public static string NotationFromMove(cgBoard _board, cgSimpleMove _move)
+    {
+        string str = "";
+
+        if (_board.moves.Count % 2 == 0) str += (Math.Floor(_board.moves.Count / 2f) + 1).ToString() + ". ";
+
+        int typ = Mathf.Abs(_board.squares[_move.from]);
+        List<cgSimpleMove> othermoves = _board.findLegalMoves(_board.whiteTurnToMove);
+        List<cgSimpleMove> ambiguousMoves = new List<cgSimpleMove>();
+        foreach (cgSimpleMove othermove in othermoves) if (othermove.to == _move.to && othermove.from != _move.from && Mathf.Abs(_board.squares[othermove.from]) == typ) ambiguousMoves.Add(othermove);
+        if (typ == 1 && _move.capturedType != 0) str += cgGlobal.SquareNames[_move.from].Substring(0, 1);
+        if (typ == 2) str += "R";
+        if (typ == 3) str += "N";
+        if (typ == 4) str += "B";
+        if (typ == 5) str += "Q";
+        if (typ == 6 && !(_move is cgCastlingMove)) str += "K";
+        //if (typ == 6) str += "K";
+
+        if (ambiguousMoves.Count > 0 && typ != 1)
+        {
+            bool fileMatch = false;
+            bool rankMatch = false;
+            foreach (cgSimpleMove ambiguousMove in ambiguousMoves)
+            {
+                if (cgGlobal.SquareNames[ambiguousMove.from].Substring(0, 1) == cgGlobal.SquareNames[_move.from].Substring(0, 1)) fileMatch = true;
+                if (cgGlobal.SquareNames[ambiguousMove.from].Substring(1, 1) == cgGlobal.SquareNames[_move.from].Substring(1, 1)) rankMatch = true;
+            }
+            if (!fileMatch) str += cgGlobal.SquareNames[_move.from].Substring(0, 1);
+            else if (fileMatch && !rankMatch) str += cgGlobal.SquareNames[_move.from].Substring(1, 1);
+            else if (fileMatch && rankMatch) str += cgGlobal.SquareNames[_move.from];
+        }
+        if (_move.capturedType != 0) str += "x";
+        if (_move is cgCastlingMove)
+        {
+            if (_move.to == 2 || _move.to == 58) str += "O-O-O";
+            else str += "O-O";
+        }
+        else str += cgGlobal.SquareNames[_move.to];
+        if (_move.promoted)
+        {
+            switch (_move.promotionType)
+            {
+                case 2:
+                    str += "=R";
+                    break;
+                case 3:
+                    str += "=N";
+                    break;
+                case 4:
+                    str += "=B";
+                    break;
+                case 5:
+                    str += "=Q";
+                    break;
+                default:
+                    break;
+            }
+        }
+        
+        return str;
+    }
+
     /// <summary>
     /// A slight adjustment to GetFullNotation, in which new lines are added to indent the text in an orderly fashion to be displayed to the player.
     /// </summary>
@@ -194,8 +276,9 @@ public class cgNotation
         else if (ntype == NotationType.Algebraic)
         {
             cgBoard disambBoard = new cgBoard();
+            bool isCheckMate = false;
             cgSimpleMove chosenMove;
-            while (lastIndex != -1)
+            while (lastIndex != -1 && !isCheckMate)
             {
                 chosenMove = null;
 
@@ -205,6 +288,16 @@ public class cgNotation
                     move = curgame.Substring(lastIndex + 1);
                 else
                     move = curgame.Substring(lastIndex + 1, nextIndex - lastIndex);
+
+                if (move.Contains("*"))
+                    break;
+
+                if (move.Contains("."))
+                    move = move.Substring(move.IndexOf(".") + 1);
+                if (move.Contains("$"))
+                    move = move.Substring(move.IndexOf("$") + 1);
+
+
                 bool legitMove = (!move.Contains(".") && move.Length > 1 && !move.Contains("\n")) ? true : false;
 
                 move = move.Trim(' ');
@@ -218,17 +311,42 @@ public class cgNotation
                     byte tosquare;
                     byte pushback = 2;
                     byte type = 1;
-                    //bool promotion = false;
+                    bool promotion = false;
+                    byte promotionType = 0;
                     bool shortCastling = (move == "O-O");
                     bool longCastling = (move == "O-O-O");
                     if (move.Contains("="))
                     {
-                        //promotion = true;
+                        promotion = true;
+                        string strToWhat = move.Substring(move.IndexOf("="), 1);
+                        switch (move[move.IndexOf("=") + 1])
+                        {
+                            case 'R':
+                                promotionType = 2;
+                                break;
+                            case 'N':
+                                promotionType = 3;
+                                break;
+                            case 'B':
+                                promotionType = 4;
+                                break;
+                            case 'Q':
+                                promotionType = 5;
+                                break;
+                        }
                         move.Remove(move.IndexOf("="), 2);
                     }
-                    else if (move.Contains("+")) move.Remove(move.IndexOf("+"), 1);
-                    else if (move.Contains("!")) move.Remove(move.IndexOf("!"), 1);
-                    else if (move.Contains("?")) move.Remove(move.IndexOf("?"), 1);
+                    else if (move.Contains("+"))
+                    {
+                        move = move.Remove(move.IndexOf("+"), 1);
+                    }
+                    else if (move.Contains("!")) move = move.Remove(move.IndexOf("!"), 1);
+                    else if (move.Contains("?")) move = move.Remove(move.IndexOf("?"), 1);
+                    else if (move.Contains("#"))
+                    {
+                        move = move.Remove(move.IndexOf("#"), 1);
+                        isCheckMate = true;
+                    }
                     tosquare = cgGlobal.IndexFromCellName(move.Substring(move.Length - pushback, 2));
                     if (move[0] == 'R') type = 2;
                     if (move[0] == 'N') type = 3;
@@ -289,6 +407,11 @@ public class cgNotation
                     }
                     if (chosenMove != null)
                     {
+                        if (promotion)
+                        {
+                            chosenMove.promoted = true;
+                            chosenMove.promotionType = promotionType;
+                        }
                         disambBoard.move(chosenMove);
                         moves.Add(chosenMove);
                     }

@@ -9,13 +9,17 @@ public class ctLibrary {
     public List<ctLine> lines = new List<ctLine>();
 
 
-    public bool AddLine(ctLine _line, int idx = -1)
+    public bool AddLine(ctLine _line, bool _sort = false)
     {
-        if (idx == -1)
-            lines.Add(_line);
-        else
-            lines.Insert(idx, _line);
+        lines.Add(_line);
 
+        if (_sort)
+        {
+            lines.Sort(delegate(ctLine p1, ctLine p2)
+            {
+                return p1.name.CompareTo(p2.name);
+            });
+        }
         return true;
     }
 
@@ -48,7 +52,7 @@ public class ctLibrary {
         for (int i = 0; i < _lib.lines.Count; i ++)
         {
             ctLine line = new ctLine(this, _lib.lines[i].name, _lib.lines[i].moves);
-            this.lines.Add(line);
+            AddLine(line);
         }
     }
 
@@ -68,9 +72,10 @@ public class ctLibrary {
 
     public int GetLineIdx(string _name)
     {
+        _name = _name.ToLower();
         for (int i = 0; i < lines.Count; i++)
         {
-            if (lines[i].name.Equals(_name))
+            if (lines[i].name.ToLower().Equals(_name))
                 return i;
         }
         return -1;

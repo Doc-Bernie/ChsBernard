@@ -7,22 +7,43 @@ public class ctLine  {
 
     public string name { get; set; }
 
-    public string moves ;
+    public string fullName
+    {
+        get
+        {
+            return parent.name + "/" + name;
+        }
+    }
 
     public List<cgSimpleMove> moveList = new List<cgSimpleMove>();
+
+    public string moves { 
+        get
+        {
+            cgNotation not = new cgNotation(new cgBoard());
+            not.moves = moveList;
+            return not.writeFullNotation(cgNotation.NotationType.Algebraic);
+        }
+        set
+        {
+            moveList.Clear();
+            if (!value.Equals(""))
+            {
+                cgNotation not = new cgNotation(new cgBoard());
+                not.Read(value);
+
+                for (int i = 0; i < not.moves.Count; i++)
+                    moveList.Add(not.moves[i]);
+            }
+        }
+    }
+
 
     public ctLine(ctLibrary _parent, string _name, string _moves = "")
     {
         parent = _parent;
         name = _name;
         moves = _moves;
-
-
-        cgNotation not = new cgNotation(new cgBoard());
-        not.Read(moves);
-
-        for (int i = 0; i < not.moves.Count; i++)
-            moveList.Add(not.moves[i]);
     }
 
     public void Clone(ctLine _line)

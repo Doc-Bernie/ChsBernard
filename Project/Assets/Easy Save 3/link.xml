@@ -1,0 +1,9 @@
+<linker>
+	<assembly fullname="mscorlib" preserve="all">
+		<namespace fullname="System.Security.Cryptography" preserve="all"/>
+		<namespace fullname="System.IO" preserve="all"/>
+	</assembly>
+	<assembly fullname="ES3" preserve="all">
+		<namespace fullname="ES3Types" preserve="all"/>
+	</assembly>
+</linker>

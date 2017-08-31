@@ -11,13 +11,18 @@ public class WndMainPage : MonoBehaviour {
     public GameObject LibraryList = null;
     public GameObject LibraryListCell = null;
     public TMPro.TextMeshProUGUI TxtLibCount = null;
-    public GameObject PopupMenu = null;
-    public RectTransform RTMenu = null;
     public MonoBehaviour ScrollRect = null;
+
+    public GameObject BtnAdd;
+    public GameObject BtnTrainer;
+    public GameObject BtnRename;
+    public GameObject BtnDelete;
+
 
     protected List<GameObject> cells = new List<GameObject>();
 
     int curLibIdx = 0;
+    bool toggleMode = false;
 
 	// Use this for initialization
 	void Awake() {
@@ -25,11 +30,11 @@ public class WndMainPage : MonoBehaviour {
 	}
 	
 	// Update is called once per frame
-	void Update () {
-		if (Input.GetKeyUp(KeyCode.Escape))
-        {
+	public void OnEscape () {
+        if (toggleMode)
+            SetToggleMode(false);
+        else
             WndManager.Singleton.OpenMsgBox("Do you really want exit?", CallBackExit, WndManager.MSGBOX_BTN_TYPE.YesNo);
-        }
 	}
 
     void ClearList()
@@ -61,14 +66,14 @@ public class WndMainPage : MonoBehaviour {
             string text = string.Format("{0} ({1})", lib.name, lib.lines.Count);
 
             childObj.GetComponent<LibraryCell>().Init(i, text, ScrollRect, CallbackTouchCell);
-            childObj.GetComponent<Toggle>().group = LibraryList.GetComponent<ToggleGroup>();
+            //childObj.GetComponent<Toggle>().group = LibraryList.GetComponent<ToggleGroup>();
             childObj.GetComponent<Toggle>().isOn = curLibIdx == i ? true : false;
             childObj.GetComponent<Toggle>().onValueChanged.AddListener(OnLibCellChanged);
 
             cells.Add(childObj);
         }
 
-        LibraryList.GetComponent<ToggleGroup>().allowSwitchOff = false;
+        //LibraryList.GetComponent<ToggleGroup>().allowSwitchOff = false;
 
     }
     
@@ -82,20 +87,23 @@ public class WndMainPage : MonoBehaviour {
     public void Init()
     {
         curLibIdx = 0;
+
+        SetToggleMode(false);
         UpdateWnd();
-        showPopupMenu(false);
     }
 
-    public void OnBtnView()
-    {
-        if (GetCurLibName().Equals(string.Empty))
-            return;
-
-        WndManager.Singleton.OpenLibraryPage(GetCurLibName());
-    }
+//     public void OnBtnView()
+//     {
+//         if (GetCurLibName().Equals(string.Empty))
+//             return;
+// 
+//         WndManager.Singleton.OpenLibraryPage(GetCurLibName());
+//     }
 
     public void OnBtnAdd()
     {
+        SetToggleMode(false);
+
         WndManager.Singleton.OpenInputBox("Enter Library's name :", CallBackAdd);
     }
 
@@ -104,28 +112,44 @@ public class WndMainPage : MonoBehaviour {
         if (GetCurLibName().Equals(string.Empty))
             return;
 
-        string strPrompt = string.Format("Do you really want to remove \"{0}\" library?", GetCurLibName());
+        string strPrompt = string.Format("Do you really want to delete selected libraries?"/* \"{0}\" library?", GetCurLibName()*/);
         WndManager.Singleton.OpenMsgBox(strPrompt, CallBackRemove, WndManager.MSGBOX_BTN_TYPE.YesNo);
-        showPopupMenu(false);
-
     }
 
     public void OnBtnRename()
     {
+        SetToggleMode(false);
+
         if (GetCurLibName().Equals(string.Empty))
             return;
 
         WndManager.Singleton.OpenInputBox("Enter Library's name :", CallBackRename, GetCurLibName());
-        showPopupMenu(false);
-
     }
 
     public void OnBtnTrainer()
     {
-        if (GetCurLibName().Equals(string.Empty))
-            return;
+        if (toggleMode)
+        {
+            List<string> libList = new List<string>();
+            for (int i = 0; i < cells.Count; i++)
+            {
+                if (cells[i].GetComponent<Toggle>().isOn)
+                {
+                    libList.Add(ctGameManager.Singleton.GetLibrary(i).name);
+                }
+            }
 
-        // to do
+            if (libList.Count < 1)
+                return;
+
+            WndManager.Singleton.OpenTrainerSettingPage(libList);
+
+            SetToggleMode(false);
+        }
+        else
+        {
+            SetToggleMode(true);
+        }
     }
 
     bool CallBackAdd(string _name)
@@ -144,7 +168,7 @@ public class WndMainPage : MonoBehaviour {
 
         ctLibrary lib = new ctLibrary();
         lib.name = _name;
-        ctGameManager.Singleton.m_Libraries.Add(lib);
+        ctGameManager.Singleton.AddLibrary(lib, true);
 
         UpdateWnd();
         return true;
@@ -174,8 +198,19 @@ public class WndMainPage : MonoBehaviour {
     {
         if (_btn == WndManager.MSGBOX_BTN.YES)
         {
-            ctGameManager.Singleton.RemoveLibrary(GetCurLibName());
+            List<string> libList = new List<string>();
+            int i;
+            for (i = 0; i < cells.Count; i ++ )
+            {
+                if (cells[i].GetComponent<Toggle>().isOn)
+                    libList.Add(ctGameManager.Singleton.GetLibrary(i).name);
+            }
+
+            for (i = 0; i < libList.Count; i++)
+                ctGameManager.Singleton.RemoveLibrary(libList[i]);
+
             UpdateWnd();
+            SetToggleMode(false);
         }
         return true;
     }
@@ -192,19 +227,10 @@ public class WndMainPage : MonoBehaviour {
         }
         return true;
     }
+
     public void OnLibCellChanged(bool check)
     {
-        if (check)
-        {
-            for (int i = 0; i < cells.Count; i++)
-            {
-                if (cells[i].GetComponent<Toggle>().isOn)
-                {
-                    curLibIdx = i;
-                    break;
-                }
-            }
-        }
+        UpdateButtonState();
     }
 
     string GetCurLibName()
@@ -221,8 +247,7 @@ public class WndMainPage : MonoBehaviour {
         curLibIdx = _id;
         if (_longTouch)
         {
-            showPopupMenu(true);
-            RTMenu.position = _eventData.position;
+            SetToggleMode(true);
         }
         else
         {
@@ -232,8 +257,44 @@ public class WndMainPage : MonoBehaviour {
         return true;
     }
 
-    void showPopupMenu(bool _vis = true)
+    void SetToggleMode(bool _mode)
     {
-        PopupMenu.SetActive(_vis);
+        toggleMode = _mode;
+
+        for (int i = 0; i < cells.Count; i++)
+        {
+            cells[i].GetComponent<LibraryCell>().SetToggleMode(toggleMode);
+            cells[i].GetComponent<Toggle>().isOn = false;
+        }
+
+        UpdateButtonState();
+    }
+
+    void UpdateButtonState()
+    {
+        BtnAdd.SetActive(!toggleMode);
+
+        if (toggleMode)
+        {
+            int selCount = 0;
+            for (int i = 0; i < cells.Count; i++)
+            {
+                if (cells[i].GetComponent<Toggle>().isOn)
+                {
+                    selCount++;
+                    curLibIdx = i;
+                }
+            }
+
+            BtnTrainer.SetActive(selCount > 0);
+            BtnRename.SetActive(selCount == 1);
+            BtnDelete.SetActive(selCount > 0);
+        }
+        else
+        {
+            BtnTrainer.SetActive(true);
+            BtnRename.SetActive(false);
+            BtnDelete.SetActive(false);
+        }
     }
 }

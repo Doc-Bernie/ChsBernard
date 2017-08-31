@@ -34,7 +34,8 @@ public class WndInputBox : MonoBehaviour {
     {
         string name = txtContent.text;
 
-        callBack(name);
+        if (!txtContent.wasCanceled)
+            callBack(name);
 
         gameObject.SetActive(false);
     }
